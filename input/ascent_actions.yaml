@@ -1,0 +1,27 @@
+# Copyright (c) 2025 Jim Eliot
+
+-
+  action: "add_scenes"
+
+  scenes:
+
+    # s0:
+    #   plots:
+    #     p0:
+    #       type: "mesh"
+    #   renders:
+    #     r0:
+    #       image_width: 1024
+    #       image_height: 512
+    #       image_prefix: "mesh_%04d"
+  
+    s1:
+      plots:
+        p0:
+          type: "pseudocolor"
+          field: "alive"
+      renders:
+        r0:
+          image_width: 1024
+          image_height: 512
+          image_prefix: "alive_%04d"

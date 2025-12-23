@@ -1,0 +1,7 @@
+{
+  "default_dir": "images",
+  "runtime": {
+    "type": "ascent",
+    "viskores": "backend"
+  }
+}

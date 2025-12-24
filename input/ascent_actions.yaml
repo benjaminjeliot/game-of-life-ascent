@@ -1,27 +1,10 @@
 # Copyright (c) 2025 Jim Eliot
 
 -
-  action: "add_scenes"
+  action: "add_triggers"
 
-  scenes:
-
-    # s0:
-    #   plots:
-    #     p0:
-    #       type: "mesh"
-    #   renders:
-    #     r0:
-    #       image_width: 1024
-    #       image_height: 512
-    #       image_prefix: "mesh_%04d"
-  
-    s1:
-      plots:
-        p0:
-          type: "pseudocolor"
-          field: "alive"
-      renders:
-        r0:
-          image_width: 1024
-          image_height: 512
-          image_prefix: "alive_%04d"
+  triggers:
+    t0:
+      params:
+        condition: "cycle() % 10 == 0"
+        actions_file : "ascent_trigger_actions.yaml"

@@ -1,0 +1,186 @@
+diff --git a/src/libs/ascent/runtimes/flow_filters/ascent_runtime_trigger_filters.cpp b/src/libs/ascent/runtimes/flow_filters/ascent_runtime_trigger_filters.cpp
+index 850aabd2..f111459e 100644
+--- a/src/libs/ascent/runtimes/flow_filters/ascent_runtime_trigger_filters.cpp
++++ b/src/libs/ascent/runtimes/flow_filters/ascent_runtime_trigger_filters.cpp
+@@ -96,14 +96,14 @@ BasicTrigger::verify_params(const conduit::Node &params,
+     bool res = check_string("condition",params, info, false);
+     res &= check_string("callback",params, info, false);
+     res &= check_string("actions_file",params, info, false);
+-    res &= check_list("actions_files",params, info, false);
++    // res &= check_list("actions_files",params, info, false);
+     res &= check_list("actions",params, info, false);
+ 
+     bool has_condition = params.has_child("condition");
+     bool has_callback  = params.has_child("callback");
+     bool has_actions   = params.has_child("actions");
+     bool has_actions_file  = params.has_child("actions_file");
+-    bool has_actions_files = params.has_child("actions_files");
++    // bool has_actions_files = params.has_child("actions_files");
+ 
+     if( has_condition && has_callback )
+     {
+@@ -120,21 +120,23 @@ BasicTrigger::verify_params(const conduit::Node &params,
+                                 " or `callback`";
+     }
+ 
+-    if( has_actions_file && has_actions_files )
+-    {
+-      res = false;
+-      info["errors"].append() = "Both `actions_file` and `actions_files` are "
+-                                "present. Choose one or the other.";
+-    }
++    // if( has_actions_file && has_actions_files )
++    // {
++    //   res = false;
++    //   info["errors"].append() = "Both `actions_file` and `actions_files` are "
++    //                             "present. Choose one or the other.";
++    // }
+ 
+-    if(has_actions && (has_actions_file || has_actions_files))
++    // if(has_actions && (has_actions_file || has_actions_files))
++    if(has_actions && has_actions_file)
+     {
+       res = false;
+       info["errors"].append() = "Both `actions` and `actions_file(s)` are "
+                                 "present. Choose one or the other.";
+     }
+ 
+-    if(!has_actions && !(has_actions_file || has_actions_files))
++    // if(!has_actions && !(has_actions_file || has_actions_files))
++    if(!has_actions && !has_actions_file)
+     {
+       res = false;
+       info["errors"].append() = "No trigger actions provided. Please "
+@@ -146,13 +148,13 @@ BasicTrigger::verify_params(const conduit::Node &params,
+     valid_paths.push_back("condition");
+     valid_paths.push_back("callback");
+     valid_paths.push_back("actions_file");
+-    valid_paths.push_back("actions_files");
++    // valid_paths.push_back("actions_files");
+     valid_paths.push_back("actions");
+ 
+     std::vector<std::string> ignore_paths;
+     // don't go down the actions or actions_files path
+     ignore_paths.push_back("actions");
+-    ignore_paths.push_back("actions_files");
++    // ignore_paths.push_back("actions_files");
+ 
+     std::string surprises = surprise_check(valid_paths, ignore_paths,params);
+ 
+@@ -178,6 +180,8 @@ BasicTrigger::execute()
+     DataObject *data_object = input<DataObject>(0);
+     std::shared_ptr<Node> n_input = data_object->as_low_order_bp();
+ 
++    bool use_actions_file = params().has_path("actions_file");
++
+     int mpi_comm_id = -1;
+ 
+ #ifdef ASCENT_MPI_ENABLED
+@@ -189,55 +193,59 @@ BasicTrigger::execute()
+     //  actions, actions_file, and actions_files
+     // are mutually exclusive options
+ 
++    std::string actions_file = "";
+     conduit::Node actions;
+ 
+-    std:vector<std::string> actions_files;
+-
+-    if(params().has_child("actions_file"))
+-    {
+-        actions_files.push_back(params()["actions_file"].as_string());
+-    }
+-    else if(params().has_child("actions_files"))
+-    {
+-        NodeConstIterator itr = params()["actions_files"].children();
+-        while(itr.has_next())
+-        {
+-            actions_files.push_back(itr.next().as_string());
+-        }
++    // std:vector<std::string> actions_files;
++
++    // if(params().has_child("actions_file"))
++    // {
++    //     actions_files.push_back(params()["actions_file"].as_string());
++    // }
++    // else if(params().has_child("actions_files"))
++    // {
++    //     NodeConstIterator itr = params()["actions_files"].children();
++    //     while(itr.has_next())
++    //     {
++    //         actions_files.push_back(itr.next().as_string());
++    //     }
++    // }
++    if(use_actions_file) {
++        actions_file = params()["actions_file"].as_string();
+     }
+     else
+     {
+       actions = params()["actions"];
+     }
+ 
+-    if(actions_files.size() > 0)
+-    {
+-        for(auto actions_file: actions_files)
+-        {
+-            Node loaded_actions;
+-            bool load_ok = load_actions_file(actions_file,
+-                                             mpi_comm_id,
+-                                             loaded_actions);
+-            if(!load_ok)
+-            {
+-                ASCENT_ERROR("Failed to load actions file: "
+-                             << actions_file);
+-            }
++    // if(actions_files.size() > 0)
++    // {
++    //     for(auto actions_file: actions_files)
++    //     {
++    //         Node loaded_actions;
++    //         bool load_ok = load_actions_file(actions_file,
++    //                                          mpi_comm_id,
++    //                                          loaded_actions);
++    //         if(!load_ok)
++    //         {
++    //             ASCENT_ERROR("Failed to load actions file: "
++    //                          << actions_file);
++    //         }
+             
+-            if(!loaded_actions.dtype().is_list())
+-            {
+-                ASCENT_ERROR("Failed actions loaded from actions file: "
+-                             << actions_file << " are not a list");
+-            }
+-
+-            NodeConstIterator itr = loaded_actions.children();
+-            while(itr.has_next())
+-            {
+-                const Node &curr = itr.next();
+-                actions.append().set(curr);
+-            }
+-        }
+-    }
++    //         if(!loaded_actions.dtype().is_list())
++    //         {
++    //             ASCENT_ERROR("Failed actions loaded from actions file: "
++    //                          << actions_file << " are not a list");
++    //         }
++
++    //         NodeConstIterator itr = loaded_actions.children();
++    //         while(itr.has_next())
++    //         {
++    //             const Node &curr = itr.next();
++    //             actions.append().set(curr);
++    //         }
++    //     }
++    // }
+ 
+     bool has_callback = params().has_path("callback");
+     bool has_condition = params().has_path("condition");
+@@ -276,6 +284,7 @@ BasicTrigger::execute()
+ #ifdef ASCENT_MPI_ENABLED
+         ascent_opts["mpi_comm"] = mpi_comm_id;
+ #endif
++        ascent_opts["actions_file"] = actions_file;
+         ascent.open(ascent_opts);
+         ascent.publish(*n_input);
+         ascent.execute(actions);
